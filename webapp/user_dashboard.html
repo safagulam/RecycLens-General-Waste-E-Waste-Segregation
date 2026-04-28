@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Smart Waste Classifier</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .header-left h1 { font-size: 2em; margin-bottom: 5px; }
+        .header-left p { opacity: 0.9; }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-info {
+            text-align: right;
+            padding-right: 20px;
+            border-right: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .user-name { font-weight: bold; font-size: 1.1em; }
+        .user-email { font-size: 0.9em; opacity: 0.8; }
+
+        .btn-logout {
+            padding: 10px 25px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-logout:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .content { padding: 40px; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-card.blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-card.orange { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
+        .stat-card.green { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .action-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .action-section h2 { margin-bottom: 15px; }
+        .action-section p { margin-bottom: 20px; opacity: 0.9; }
+
+        .btn-primary {
+            padding: 15px 40px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .reports-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .reports-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .reports-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .reports-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .reports-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-noted {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-collected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .btn-view {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-view:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .info-group {
+            margin-bottom: 20px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 2em;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #e74c3c;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+
+        .empty-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>👤 User Dashboard</h1>
+                <p>Manage your waste reports</p>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <div class="user-name" id="userName">Loading...</div>
+                    <div class="user-email" id="userEmail">Loading...</div>
+                </div>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Summary Stats -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card blue">
+                    <div class="stat-value" id="totalReports">-</div>
+                    <div class="stat-label">Total Reports</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-value" id="pendingReports">-</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-value" id="collectedReports">-</div>
+                    <div class="stat-label">Collected</div>
+                </div>
+            </div>
+ 
+            <!-- Quick Action -->
+            <div class="action-section">
+                <h2>📤 Report Waste for Collection</h2>
+                <p>Have waste to dispose? Submit a report and we'll collect it!</p>
+                <button class="btn-primary" onclick="location.href='/report'">
+                    Submit New Report
+                </button>
+            </div>
+
+            <!-- My Reports -->
+            <div id="loadingSection" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading your reports...</p>
+            </div>
+
+            <div id="reportsSection">
+                <h2 class="section-title">📋 My Reports</h2>
+                
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-icon">📄</div>
+                    <h3>No Reports Yet</h3>
+                    <p>Submit your first waste report to get started!</p>
+                </div>
+
+                <table class="reports-table" id="reportsTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Date</th>
+                            <th>Waste Type</th>
+                            <th>Weight</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody">
+                        <!-- Loaded via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Details Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 class="modal-header">Report Details</h2>
+            <div id="reportDetails">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userReports = [];
+
+        // Load user info and reports on page load
+        window.addEventListener('load', function() {
+            loadUserInfo();
+            loadReports();
+        });
+
+        function loadUserInfo() {
+            const userName = localStorage.getItem('user_name') || 'User';
+            const userEmail = localStorage.getItem('user_email') || '';
+            
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userEmail').textContent = userEmail;
+        }
+
+        async function loadReports() {
+            document.getElementById('loadingSection').style.display = 'block';
+            document.getElementById('reportsSection').style.display = 'none';
+
+            try {
+                const sessionToken = localStorage.getItem('session_token');
+                
+                const response = await fetch('/api/waste-reports/my-reports', {
+                    headers: {
+                        'Authorization': 'Bearer ' + sessionToken
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch reports');
+                }
+
+                const reports = await response.json();
+                userReports = reports;
+
+                displayReports(reports);
+                updateStats(reports);
+
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                document.getElementById('loadingSection').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+            }
+        }
+
+        function displayReports(reports) {
+            document.getElementById('loadingSection').style.display = 'none';
+            document.getElementById('reportsSection').style.display = 'block';
+
+            if (reports.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('reportsTable').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('reportsTable').style.display = 'table';
+
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = '';
+
+            reports.forEach(report => {
+                const row = document.createElement('tr');
+                
+                const statusClass = `status-${report.status}`;
+                const statusText = report.status.charAt(0).toUpperCase() + report.status.slice(1);
+                
+                const date = new Date(report.submitted_at).toLocaleDateString();
+                
+                row.innerHTML = `
+                    <td><strong>${report.id}</strong></td>
+                    <td>${date}</td>
+                    <td>${report.waste_type}</td>
+                    <td>${report.waste_weight} kg</td>
+                    <td>${report.address.substring(0, 30)}...</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td><button class="btn-view" onclick="viewReport('${report.id}')">View</button></td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateStats(reports) {
+            const total = reports.length;
+            const pending = reports.filter(r => r.status === 'pending').length;
+            const noted = reports.filter(r => r.status === 'noted').length;
+            const collected = reports.filter(r => r.status === 'collected').length;
+
+            document.getElementById('totalReports').textContent = total;
+            document.getElementById('pendingReports').textContent = pending + noted;
+            document.getElementById('collectedReports').textContent = collected;
+        }
+
+        function viewReport(reportId) {
+            const report = userReports.find(r => r.id === reportId);
+            if (!report) return;
+
+            const statusClass = `status-${report.status}`;
+            const statusText = report.status.charAt(0).toUpperCase() + report.status.slice(1);
+
+            const detailsHTML = `
+                <div class="info-group">
+                    <div class="info-label">Report ID</div>
+                    <div class="info-value">${report.id}</div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">Status</div>
+                    <div class="info-value">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">Submitted On</div>
+                    <div class="info-value">${new Date(report.submitted_at).toLocaleString()}</div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">Contact Information</div>
+                    <div class="info-value">
+                        Name: ${report.user_name}<br>
+                        Phone: ${report.phone}<br>
+                        Email: ${report.email}
+                    </div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">Location</div>
+                    <div class="info-value">
+                        ${report.address}<br>
+                        <small>Coordinates: ${report.latitude.toFixed(6)}, ${report.longitude.toFixed(6)}</small>
+                    </div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">Waste Details</div>
+                    <div class="info-value">
+                        Type: ${report.waste_type}<br>
+                        Weight: ${report.waste_weight} kg<br>
+                        ${report.waste_description ? 'Description: ' + report.waste_description : ''}
+                    </div>
+                </div>
+
+                ${report.ngo_notes ? `
+                    <div class="info-group">
+                        <div class="info-label">NGO Response</div>
+                        <div class="info-value">
+                            ${report.ngo_notes}<br>
+                            ${report.assigned_to ? 'Assigned to: ' + report.assigned_to : ''}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${report.collected_at ? `
+                    <div class="info-group">
+                        <div class="info-label">Collected On</div>
+                        <div class="info-value">${new Date(report.collected_at).toLocaleString()}</div>
+                    </div>
+                ` : ''}
+            `;
+
+            document.getElementById('reportDetails').innerHTML = detailsHTML;
+            document.getElementById('reportModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('reportModal').classList.remove('active');
+        }
+
+        function logout() {
+            const sessionToken = localStorage.getItem('session_token');
+            
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ session_token: sessionToken })
+            }).then(() => {
+                localStorage.clear();
+                window.location.href = '/login';
+            });
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('reportModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
