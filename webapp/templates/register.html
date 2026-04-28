@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Smart Waste Classifier</title>
+    <style>
+        :root {
+            --primary-green: #1b4332; /* Deep Forest Green */
+            --bright-green: #2d6a4f;
+            --accent-green: #95d5b2;
+            --pure-white: #ffffff;
+            --off-white: #f4f7f5;
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        body {
+            background-color: var(--pure-white);
+            color: var(--primary-green);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- Bubble Background --- */
+        #bubble-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bubble {
+            position: absolute;
+            border: 1px solid var(--accent-green);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: floatUp 12s infinite linear;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) scale(0.5); opacity: 0; }
+            20% { opacity: 0.4; }
+            80% { opacity: 0.4; }
+            100% { transform: translateY(-20vh) scale(1.2); opacity: 0; }
+        }
+
+        /* --- Main Layout --- */
+        .register-container {
+            display: grid;
+            grid-template-columns: 40% 60%;
+            min-height: 100vh;
+        }
+
+        /* --- Visual Side --- */
+        .register-visual {
+            background: var(--primary-green);
+            color: var(--pure-white);
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-visual::after {
+            content: "";
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .register-visual-icon {
+            font-size: 5rem;
+            margin-bottom: 2rem;
+            filter: grayscale(1) brightness(2);
+        }
+
+        .register-visual h2 {
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+        }
+
+        .register-visual p {
+            font-size: 1.3rem;
+            font-style: italic;
+            opacity: 0.8;
+            max-width: 400px;
+        }
+
+        /* --- Form Side --- */
+        .register-form-container {
+            padding: 60px 10%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: var(--pure-white);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--primary-green);
+            display: inline-block;
+            width: fit-content;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+        }
+
+        .register-form-container > p {
+            font-style: italic;
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* --- Role Selection Cards --- */
+        .role-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .role-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            background: var(--off-white);
+        }
+
+        .role-card input { display: none; }
+
+        .role-card.selected {
+            border: 2px solid var(--primary-green);
+            background: white;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(27, 67, 50, 0.1);
+        }
+
+        .role-icon { font-size: 1.5rem; margin-bottom: 10px; }
+        .role-title { font-weight: bold; font-size: 1.2rem; }
+        .role-description { font-size: 0.9rem; font-style: italic; margin-top: 5px; }
+
+        /* --- Form Styling --- */
+        .form-group { margin-bottom: 1.5rem; }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            background: var(--off-white);
+            font-size: 1rem;
+            font-family: "Times New Roman", serif;
+            transition: var(--transition);
+        }
+
+        input:focus {
+            outline: none;
+            border-bottom: 2px solid var(--primary-green);
+            background: white;
+        }
+
+        /* Password Strength */
+        .password-strength {
+            height: 3px;
+            background: #eee;
+            margin-top: 5px;
+            width: 100%;
+        }
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s;
+        }
+        .strength-weak { background: #ff4d4d; width: 33%; }
+        .strength-medium { background: #ffd93d; width: 66%; }
+        .strength-strong { background: var(--primary-green); width: 100%; }
+
+        .btn-register {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: var(--transition);
+        }
+
+        .btn-register:hover {
+            background: var(--bright-green);
+            letter-spacing: 4px;
+        }
+
+        .btn-register:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Alert Box */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+            font-style: italic;
+            border: 1px solid;
+        }
+        .alert-error { background: #fff5f5; color: #c53030; border-color: #feb2b2; }
+        .alert-success { background: #f0fff4; color: #276749; border-color: #9ae6b4; }
+
+        .divider {
+            text-align: center;
+            margin: 2rem 0;
+            position: relative;
+        }
+        .divider::before {
+            content: "";
+            position: absolute;
+            left: 0; top: 50%; width: 100%; height: 1px;
+            background: #ddd; z-index: 1;
+        }
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            position: relative;
+            z-index: 2;
+            font-style: italic;
+            color: #888;
+        }
+
+        .login-prompt {
+            text-align: center;
+            font-style: italic;
+        }
+
+        .login-prompt a {
+            color: var(--primary-green);
+            font-weight: bold;
+            text-decoration: none;
+            border-bottom: 1px solid var(--primary-green);
+        }
+
+        @media (max-width: 1000px) {
+            .register-container { grid-template-columns: 1fr; }
+            .register-visual { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="bubble-canvas"></div>
+
+    <div class="register-container">
+        <div class="register-visual">
+            <div class="register-visual-icon">♻️</div>
+            <h2>Join Us.</h2>
+            <p>Initiate your contribution to global sustainability AI waste classification and reporting.</p>
+        </div>
+
+        <div class="register-form-container">
+            <div class="logo">Smart Waste</div>
+            <h1>Create Account</h1>
+            <p>Select your designation to proceed</p>
+
+            <div id="alert" class="alert"></div>
+
+            <form id="registerForm">
+                <!-- Role Selection -->
+                <div class="role-selection">
+                    <label class="role-card" onclick="selectRole('user', this)">
+                        <input type="radio" name="role" value="user" required>
+                        <div class="role-icon">👤</div>
+                        <div class="role-title">User</div>
+                        <div class="role-description">Report waste & track impact</div>
+                    </label>
+
+                    <label class="role-card" onclick="selectRole('ngo', this)">
+                        <input type="radio" name="role" value="ngo" required>
+                        <div class="role-icon">🏢</div>
+                        <div class="role-title">NGO Authority</div>
+                        <div class="role-description">Govern reports & campaigns</div>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="fullName">Full Name *</label>
+                    <input type="text" id="fullName" required placeholder="Ex: Johnathan Doe">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" required placeholder="name@domain.com">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Password *</label>
+                        <input type="password" id="password" required placeholder="Security key">
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="strengthBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password *</label>
+                        <input type="password" id="confirmPassword" required placeholder="Re-verify">
+                    </div>
+                </div>
+
+                <!-- Hidden by default, shown for NGO -->
+                <div class="form-group" id="organizationGroup" style="display: none;">
+                    <label for="organization">Organization Name *</label>
+                    <input type="text" id="organization" placeholder="Official Title">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" required placeholder="+91 00000 00000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location *</label>
+                        <input type="text" id="location" required placeholder="City, State">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-register" id="registerBtn">Initiate Registration</button>
+            </form>
+
+            <div class="divider">
+                <span>OR</span>
+            </div>
+
+            <div class="login-prompt">
+                Already part of the network? <a href="/login">Sign in here</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- BUBBLE GENERATOR ---
+        const bubbleContainer = document.getElementById('bubble-canvas');
+        for (let i = 0; i < 20; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const size = Math.random() * 60 + 20 + 'px';
+            bubble.style.width = size;
+            bubble.style.height = size;
+            bubble.style.left = Math.random() * 100 + 'vw';
+            bubble.style.animationDuration = Math.random() * 8 + 8 + 's';
+            bubble.style.animationDelay = Math.random() * 5 + 's';
+            bubbleContainer.appendChild(bubble);
+        }
+
+        // --- ORIGINAL LOGIC (UNTOUCHED) ---
+        let selectedRole = null;
+
+        function selectRole(role, element) {
+            selectedRole = role;
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            if (element) {
+                element.classList.add('selected');
+            }
+            const orgGroup = document.getElementById('organizationGroup');
+            const orgInput = document.getElementById('organization');
+            
+            if (role === 'ngo') {
+                orgGroup.style.display = 'block';
+                orgInput.required = true;
+            } else {
+                orgGroup.style.display = 'none';
+                orgInput.required = false;
+                orgInput.value = ''; 
+            }
+        }
+
+        const passwordInput = document.getElementById('password');
+        const strengthBar = document.getElementById('strengthBar');
+
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            const length = password.length;
+            strengthBar.className = 'password-strength-bar';
+            if (length === 0) {
+                strengthBar.style.width = '0%';
+            } else if (length < 6) {
+                strengthBar.classList.add('strength-weak');
+            } else if (length < 10) {
+                strengthBar.classList.add('strength-medium');
+            } else {
+                strengthBar.classList.add('strength-strong');
+            }
+        });
+
+        const registerForm = document.getElementById('registerForm');
+        
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!selectedRole) {
+                showAlert('Please select a role (User or NGO Authority)', 'error');
+                return;
+            }
+
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const phone = document.getElementById('phone').value;
+            const location = document.getElementById('location').value;
+            const organization = document.getElementById('organization').value;
+
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'error');
+                return;
+            }
+            if (password.length < 6) {
+                showAlert('Password must be at least 6 characters', 'error');
+                return;
+            }
+            if (selectedRole === 'ngo' && !organization.trim()) {
+                showAlert('Organization Name is required for NGO accounts', 'error');
+                return;
+            }
+
+            const registerBtn = document.getElementById('registerBtn');
+            registerBtn.disabled = true;
+            registerBtn.textContent = 'Creating account...';
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        full_name: fullName,
+                        role: selectedRole,
+                        phone: phone,
+                        location: location,
+                        organization: selectedRole === 'ngo' ? organization : null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('✅ Account created! Redirecting to login...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    showAlert(data.message || 'Registration failed', 'error');
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = 'Create Account';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Connection error. Please check server.', 'error');
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'Create Account';
+            }
+        });
+
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.textContent = message;
+            alertDiv.className = 'alert alert-' + type;
+            alertDiv.style.display = 'block';
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

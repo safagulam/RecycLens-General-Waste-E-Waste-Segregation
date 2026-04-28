@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Recyclens</title>
+    <style>
+        :root {
+            --primary-green: #1b4332; /* Deep Forest Green */
+            --bright-green: #2d6a4f;
+            --accent-green: #95d5b2;
+            --pure-white: #ffffff;
+            --off-white: #f4f7f5;
+            --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        body {
+            background-color: var(--pure-white);
+            color: var(--primary-green);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- Bubble Animation --- */
+        #bubble-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bubble {
+            position: absolute;
+            border: 1.5px solid var(--accent-green);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: floatUp 15s infinite linear;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) scale(0.5); opacity: 0; }
+            20% { opacity: 0.4; }
+            80% { opacity: 0.4; }
+            100% { transform: translateY(-20vh) scale(1.2); opacity: 0; }
+        }
+
+        /* --- Login Container --- */
+        .login-container {
+            background: white;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 650px;
+            display: grid;
+            grid-template-columns: 45% 55%;
+            box-shadow: 0 40px 100px rgba(27, 67, 50, 0.15);
+            border: 1px solid var(--accent-green);
+            z-index: 10;
+            margin: 20px;
+        }
+
+        /* --- Visual Side --- */
+        .login-visual {
+            background: var(--primary-green);
+            color: var(--pure-white);
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-visual-icon {
+            font-size: 6rem;
+            margin-bottom: 2rem;
+            filter: grayscale(1) brightness(2);
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .login-visual h2 {
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+        }
+
+        .login-visual p {
+            font-size: 1.3rem;
+            font-style: italic;
+            opacity: 0.8;
+            border-left: 2px solid var(--accent-green);
+            padding-left: 20px;
+        }
+
+        /* --- Form Side --- */
+        .login-form-container {
+            padding: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: var(--pure-white);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 2rem;
+            display: inline-block;
+            border-bottom: 2px solid var(--primary-green);
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 400;
+            margin-bottom: 10px;
+            color: var(--primary-green);
+        }
+
+        .login-form-container > p {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        /* --- Form Elements --- */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1.5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            background: var(--off-white);
+            font-size: 1.1rem;
+            font-family: "Times New Roman", serif;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-bottom: 2px solid var(--primary-green);
+            background: white;
+            padding-left: 20px;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background: var(--bright-green);
+            letter-spacing: 5px;
+            transform: translateY(-3px);
+        }
+
+        .btn-login:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            letter-spacing: 3px;
+        }
+
+        /* --- Decorative Divider --- */
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            position: relative;
+            font-style: italic;
+            color: #888;
+        }
+
+        .signup-prompt {
+            text-align: center;
+            font-size: 1.1rem;
+            font-style: italic;
+        }
+
+        .signup-prompt a {
+            color: var(--primary-green);
+            text-decoration: none;
+            font-weight: bold;
+            border-bottom: 1px solid var(--primary-green);
+        }
+
+        /* --- Alerts --- */
+        .alert {
+            padding: 15px;
+            margin-bottom: 25px;
+            display: none;
+            font-style: italic;
+            border: 1px solid;
+        }
+
+        .alert-error {
+            background: #fff5f5;
+            color: #c53030;
+            border-color: #feb2b2;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            color: #276749;
+            border-color: #9ae6b4;
+        }
+
+        @media (max-width: 850px) {
+            .login-container { grid-template-columns: 1fr; }
+            .login-visual { display: none; }
+            .login-form-container { padding: 40px; }
+            h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Bubbles -->
+    <div id="bubble-canvas"></div>
+
+    <div class="login-container">
+        <!-- Badass Left Side -->
+        <div class="login-visual">
+            <div class="login-visual-icon">♻️</div>
+            <h2>See Waste<br>Act Smart.</h2>
+            <p>AI-driven waste monitoring for smarter city management</p>
+        </div>
+
+        <!-- Professional Right Side -->
+        <div class="login-form-container">
+            <div class="logo">Recyclens</div>
+            <h1>Sign In</h1>
+            <p>Enter your credentials to the hub</p>
+
+            <div id="alert" class="alert"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" required placeholder="name@domain.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="Verification key">
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">Authorize Access</button>
+            </form>
+
+            
+        </div>
+    </div>
+
+    <script>
+        // --- BUBBLE EFFECT GENERATOR ---
+        const container = document.getElementById('bubble-canvas');
+        for (let i = 0; i < 20; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const size = Math.random() * 60 + 20 + 'px';
+            bubble.style.width = size;
+            bubble.style.height = size;
+            bubble.style.left = Math.random() * 100 + 'vw';
+            bubble.style.animationDuration = Math.random() * 10 + 10 + 's';
+            bubble.style.animationDelay = Math.random() * 5 + 's';
+            container.appendChild(bubble);
+        }
+
+        // --- ORIGINAL FUNCTIONALITY (STRICTLY UNMODIFIED) ---
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const alertDiv = document.getElementById('alert');
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // UI feedback
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in...';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 1. Save token in a COOKIE
+                    document.cookie = `session_token=${data.session_token}; path=/; max-age=${7*24*60*60}`;
+                    
+                    // 2. Save user info in localStorage
+                    localStorage.setItem('user_name', data.user.full_name);
+                    localStorage.setItem('user_role', data.user.role);
+
+                    showAlert('✅ Login successful! Redirecting...', 'success');
+
+                    // 3. ROLE-BASED REDIRECTION
+                    setTimeout(() => {
+                        if (data.user.role === 'ngo') {
+                            window.location.href = '/ngo-dashboard';
+                        } else {
+                            window.location.href = '/user-dashboard';
+                        }
+                    }, 1000);
+
+                } else {
+                    showAlert(data.message || 'Login failed', 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Sign In';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Server error. Please try again.', 'error');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+            }
+        });
+
+        function showAlert(message, type) {
+            alertDiv.textContent = message;
+            alertDiv.className = 'alert alert-' + type;
+            alertDiv.style.display = 'block';
+            setTimeout(() => { alertDiv.style.display = 'none'; }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Waste Classifier - AI-Powered Waste Management</title>
+    <style>
+        :root {
+            --pure-white: #ffffff;
+            --off-white: #f4f7f5;
+            --primary-green: #1b4332; /* Deep Forest Green */
+            --bright-green: #2d6a4f;
+            --accent-green: #95d5b2;
+            --transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--pure-white);
+            color: var(--primary-green);
+            font-family: "Times New Roman", Times, serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- Bubble Effect --- */
+        #bubble-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .bubble {
+            position: absolute;
+            border: 1.5px solid var(--accent-green);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: floatUp 15s infinite linear;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.4; }
+            80% { opacity: 0.4; }
+            100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* --- Navigation --- */
+        .navbar {
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 2px solid var(--primary-green);
+            padding: 1.5rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--primary-green);
+            font-size: 1.1rem;
+            font-style: italic;
+        }
+
+        .nav-btn {
+            padding: 0.7rem 1.5rem;
+            border: 1px solid var(--primary-green);
+            background: none;
+            cursor: pointer;
+            font-family: "Times New Roman", serif;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .btn-register {
+            background: var(--primary-green);
+            color: white;
+            margin-left: 10px;
+        }
+
+        .btn-register:hover {
+            background: var(--bright-green);
+            transform: translateY(-3px);
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 2rem;
+            border-bottom: 1px solid var(--accent-green);
+        }
+
+        .hero-content h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 400;
+            line-height: 1;
+            margin-bottom: 2rem;
+        }
+
+        .hero-content p {
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            font-size: 1.4rem;
+            font-style: italic;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+
+        /* --- Badass Impact Section --- */
+        .badass-impact {
+            background: var(--primary-green);
+            color: var(--pure-white);
+            padding: 120px 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .impact-image {
+            border: 10px solid var(--pure-white);
+            height: 500px;
+            background: url('https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&q=80&w=800') center/cover;
+            filter: grayscale(100%) contrast(120%);
+        }
+
+        .impact-text h2 {
+            font-size: 4rem;
+            line-height: 1.1;
+            margin-bottom: 2rem;
+        }
+
+        /* --- Stats Bento --- */
+        .stats {
+            padding: 100px 2rem;
+            background: var(--off-white);
+        }
+
+        .stats-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--accent-green);
+            padding: 3rem 1rem;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary-green);
+            transform: scale(1.05);
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            display: block;
+        }
+
+        /* --- Features Section --- */
+        .features {
+            padding: 120px 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 4rem;
+            text-decoration: underline;
+        }
+
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-box {
+            border-bottom: 2px solid var(--primary-green);
+            padding: 2rem 0;
+            transition: var(--transition);
+        }
+
+        .feature-box:hover {
+            padding-left: 20px;
+            background: var(--off-white);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* --- CTA --- */
+        .cta {
+            padding: 150px 2rem;
+            text-align: center;
+            border-top: 2px solid var(--primary-green);
+        }
+
+        .cta h2 {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+        }
+
+        /* --- Footer --- */
+        footer {
+            padding: 60px 2rem;
+            background: var(--primary-green);
+            color: white;
+            text-align: center;
+        }
+
+        .footer-links a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-style: italic;
+        }
+
+        /* --- Animations --- */
+        [data-reveal] {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        [data-reveal].active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 900px) {
+            .badass-impact { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .hero-content h1 { font-size: 3.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bubble-container"></div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">Recyclens-Waste classification and reporting</div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#about">About</a>
+                
+                <button class="nav-btn btn-login" onclick="window.location.href='/login'">Login</button>
+                <button class="nav-btn btn-register" onclick="window.location.href='/register'">Get Started</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Section 1: Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 data-reveal>Smart Technology </h1>
+            <p data-reveal>for Smarter, Cleaner Cities</p>
+            <div class="hero-buttons" data-reveal>
+                <button class="nav-btn btn-register" style="padding: 1.2rem 3rem; font-size: 1.2rem;" onclick="window.location.href='/register'">Start Classification</button>
+                <button class="nav-btn" style="padding: 1.2rem 3rem; font-size: 1.2rem;" onclick="scrollToFeatures()">The Technology</button>
+            </div>
+        </div>
+    </section>
+
+    
+
+    
+
+    <!-- Section 4: Features Grid -->
+    <section class="features" id="features">
+        <h2 class="section-title" data-reveal>Capabilities</h2>
+        <div class="features-grid">
+            <div class="feature-box" data-reveal>
+                <span class="feature-icon">🤖</span>
+                <h3>AI-Powered Detection</h3>
+                <p>Computer vision models engineered specifically for e-waste and biological composites.</p>
+                </div>
+                <div class="feature-box" data-reveal>
+                <span class="feature-icon">🌍</span>
+                <h3>Waste reporting</h3>
+                <p>Computer vision models engineered specifically for e-waste and biological composites.</p>
+                </div>
+           </div>
+    </section>
+
+    <!-- Section 5: CTA -->
+    <section class="cta" data-reveal>
+        <h2>Join us</h2>
+        <p style="font-size: 1.5rem; margin-bottom: 3rem; font-style: italic;">Be part of cleaner society.</p>
+        <button class="nav-btn btn-register" onclick="window.location.href='/register'" style="padding: 1.5rem 4rem; font-size: 1.3rem;">
+            Create Your Account
+        </button>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+       
+        <p style="margin-top: 30px; opacity: 0.7;">&copy; 2026 Smart Waste Classifier.</p>
+    </footer>
+
+    <script>
+        // Bubble Generator
+        function createBubbles() {
+            const container = document.getElementById('bubble-container');
+            for (let i = 0; i < 25; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                const size = Math.random() * 60 + 10 + 'px';
+                bubble.style.width = size;
+                bubble.style.height = size;
+                bubble.style.left = Math.random() * 100 + 'vw';
+                bubble.style.animationDuration = Math.random() * 10 + 10 + 's';
+                bubble.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(bubble);
+            }
+        }
+        createBubbles();
+
+        // Reveal Animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+
+        // Original Smooth Scroll
+        function scrollToFeatures() {
+            document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Navbar Shadow
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.style.boxShadow = '0 5px 20px rgba(27, 67, 50, 0.1)';
+            } else {
+                navbar.style.boxShadow = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

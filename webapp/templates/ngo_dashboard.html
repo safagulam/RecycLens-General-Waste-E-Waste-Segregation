@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Dashboard - Smart Waste Classifier</title>
+    <!-- Dependencies -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-green: #1b4332; /* Deep Forest Green */
+            --mid-green: #2d6a4f;
+            --accent-green: #95d5b2;
+            --pure-white: #ffffff;
+            --off-white: #f4f9f4;
+            --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Times New Roman", Times, serif; }
+        
+        body {
+            background: var(--pure-white);
+            color: var(--primary-green);
+            overflow-x: hidden;
+            line-height: 1.4;
+        }
+
+        /* --- Bubble Effect --- */
+        #bubble-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bubble {
+            position: absolute;
+            border: 1px solid var(--accent-green);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: floatUp 15s infinite linear;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) scale(0.5); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-20vh) scale(1.2); opacity: 0; }
+        }
+
+        /* --- Header --- */
+        .header {
+            background: var(--primary-green);
+            padding: 40px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            border-bottom: 8px solid var(--mid-green);
+        }
+
+        .header-left h1 { 
+            font-size: 3rem; 
+            text-transform: uppercase; 
+            letter-spacing: 4px;
+            font-weight: 400;
+        }
+        
+        .header-right { display: flex; gap: 40px; align-items: center; }
+        .org-name { font-weight: bold; font-size: 1.5rem; letter-spacing: 1px; }
+        .user-email { font-style: italic; opacity: 0.7; }
+
+        .btn-logout {
+            padding: 12px 30px;
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: var(--transition);
+        }
+
+        .btn-logout:hover { background: white; color: var(--primary-green); }
+
+        /* --- Navigation Tabs --- */
+        .tabs-bar {
+            background: white;
+            padding: 0 60px;
+            display: flex;
+            gap: 40px;
+            border-bottom: 1px solid var(--accent-green);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .tab-btn {
+            padding: 25px 0;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary-green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tab-btn:hover { opacity: 0.6; }
+        .tab-btn.active { border-bottom-color: var(--primary-green); font-style: italic; }
+
+        /* --- Main Content --- */
+        .main-content { padding: 60px; max-width: 1500px; margin: 0 auto; }
+        .tab-content { display: none; animation: fadeIn 0.8s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; } }
+
+        /* --- Bento Stats Grid --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        .stat-card {
+            background: var(--off-white);
+            padding: 40px;
+            border: 1px solid var(--accent-green);
+            transition: var(--transition);
+            position: relative;
+        }
+        .stat-card:hover { transform: translateY(-10px); border-color: var(--primary-green); background: white; }
+        
+        /* Badass Borders for specific states */
+        .card-pending { border-top: 8px solid #ccaa00; }
+        .card-noted { border-top: 8px solid var(--mid-green); }
+        .card-collected { border-top: 8px solid var(--primary-green); }
+
+        .stat-value { font-size: 4rem; font-weight: 400; margin-bottom: 5px; line-height: 1; }
+        .stat-label { color: var(--primary-green); font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* --- Table Section --- */
+        .data-section {
+            background: white;
+            padding: 50px;
+            border: 1px solid #ddd;
+            position: relative;
+        }
+
+        .data-section::before {
+            content: "REGISTRY AUDIT LOG";
+            position: absolute;
+            top: 15px; right: 20px;
+            font-size: 0.7rem; letter-spacing: 2px; opacity: 0.4;
+        }
+
+        .section-title { 
+            font-size: 2.2rem; 
+            margin-bottom: 40px; 
+            border-bottom: 2px solid var(--primary-green);
+            display: inline-block;
+            font-weight: 400;
+        }
+
+        .reports-table { width: 100%; border-collapse: collapse; }
+        .reports-table th { text-align: left; padding: 20px; background: var(--off-white); color: var(--primary-green); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        .reports-table td { padding: 20px; border-bottom: 1px solid #eee; font-size: 1.1rem; }
+        .reports-table tr:hover { background: #fcfcfc; }
+
+        /* --- Status Select Styling --- */
+        .status-select {
+            padding: 10px 15px;
+            border: 1px solid var(--primary-green);
+            background: white;
+            font-family: "Times New Roman", serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .status-pending { color: #886600; }
+        .status-noted { color: var(--mid-green); }
+        .status-collected { color: var(--primary-green); text-decoration: underline; }
+
+        /* --- Map & Charts --- */
+        #map { 
+            height: 600px; 
+            border: 2px solid var(--primary-green); 
+            filter: grayscale(1) contrast(1.1); 
+            transition: 0.5s;
+        }
+        #map:hover { filter: grayscale(0); }
+
+        .chart-box { 
+            background: var(--off-white); 
+            padding: 40px; 
+            border: 1px solid var(--accent-green); 
+            height: 500px; 
+        }
+
+        .btn-map {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        /* --- Campaign Badass Section --- */
+        .campaign-hero {
+            background: var(--primary-green);
+            color: white;
+            padding: 100px;
+            text-align: center;
+        }
+        .campaign-hero h2 { font-size: 3.5rem; margin-bottom: 30px; font-weight: 400; }
+
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .header { padding: 30px; flex-direction: column; text-align: center; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bubble-canvas"></div>
+
+    <header class="header">
+        <div class="header-left">
+            <h1>NGO Center</h1>
+            <p style="font-style: italic; opacity: 0.8;">Autonomous Waste Governance & Audit System</p>
+        </div>
+        <div class="header-right">
+            <div class="user-meta">
+                <div class="org-name" id="orgNameDisplay">NGO Authority</div>
+                <div class="user-email" id="userEmailDisplay">admin@ngo.org</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Sign Out</button>
+        </div>
+    </header>
+
+    <nav class="tabs-bar">
+        <div class="tab-btn active" onclick="showTab('reports')">01 Registry</div>
+        <div class="tab-btn" onclick="showTab('hotspots')">02 Cartography</div>
+        <div class="tab-btn" onclick="showTab('campaigns')">03 Logistics</div>
+        <div class="tab-btn" onclick="showTab('analytics')">04 Analytics</div>
+    </nav>
+
+    <div class="main-content">
+        
+        <!-- TAB 1: REPORTS -->
+        <div id="tab-reports" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalReports">0</div>
+                    <div class="stat-label">Total Registry Items</div>
+                </div>
+                <div class="stat-card card-pending">
+                    <div class="stat-value" id="pendingReports">0</div>
+                    <div class="stat-label">Awaiting Retrieval</div>
+                </div>
+                <div class="stat-card card-noted">
+                    <div class="stat-value" id="notedReports">0</div>
+                    <div class="stat-label">In-Transit Status</div>
+                </div>
+                <div class="stat-card card-collected">
+                    <div class="stat-value" id="collectedReports">0</div>
+                    <div class="stat-label">Verified Collection</div>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <h2 class="section-title">Waste Stream Registry</h2>
+                <table class="reports-table">
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Identity</th>
+                            <th>Classification</th>
+                            <th>Mass (kg)</th>
+                            <th>Coordinates</th>
+                            <th>Status Audit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody">
+                        <tr><td colspan="7" style="text-align:center; padding:60px; font-style:italic;">Initializing registry data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 2: HOTSPOTS -->
+        <div id="tab-hotspots" class="tab-content">
+            <div class="data-section">
+                <h2 class="section-title">Hotspot Cartography</h2>
+                <p style="margin-bottom: 25px; font-style: italic;">Dynamic mapping of high-density waste concentration areas.</p>
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <!-- TAB 3: CAMPAIGNS -->
+        <div id="tab-campaigns" class="tab-content">
+            <div class="campaign-hero">
+                <h2>LOGISTICS MANAGEMENT</h2>
+                <p style="font-size: 1.4rem; font-style: italic; opacity: 0.8; margin-bottom: 40px;">Launch and coordinate community-wide resource recovery drives.</p>
+                <button class="btn-logout" style="background:white; color:var(--primary-green); padding: 20px 50px;" 
+                        onclick="location.href='/collection-drives'">Enter Logistics Manager →</button>
+            </div>
+        </div>
+
+        <!-- TAB 4: ANALYTICS -->
+        <div id="tab-analytics" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card" style="grid-column: span 4;">
+                    <div class="stat-value" id="totalWeight">0</div>
+                    <div class="stat-label">Aggregate Managed Mass (kg)</div>
+                </div>
+            </div>
+            <div class="data-section">
+                <h2 class="section-title">Composition Analysis</h2>
+                <div class="chart-box">
+                    <canvas id="wasteChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- BUBBLE GENERATOR ---
+        const bubbleContainer = document.getElementById('bubble-canvas');
+        for (let i = 0; i < 20; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const size = Math.random() * 50 + 20 + 'px';
+            bubble.style.width = size; bubble.style.height = size;
+            bubble.style.left = Math.random() * 100 + 'vw';
+            bubble.style.animationDuration = Math.random() * 8 + 8 + 's';
+            bubble.style.animationDelay = Math.random() * 5 + 's';
+            bubbleContainer.appendChild(bubble);
+        }
+
+        // --- ORIGINAL DASHBOARD LOGIC (UNTOUCHED) ---
+        let map;
+        let chart;
+
+        window.addEventListener('load', () => { initDashboard(); });
+
+        function initDashboard() {
+            if (localStorage.getItem('user_role') !== 'ngo') {
+                window.location.href = '/login';
+                return;
+            }
+            document.getElementById('orgNameDisplay').textContent = localStorage.getItem('user_name') || 'Authorized NGO';
+            document.getElementById('userEmailDisplay').textContent = localStorage.getItem('user_email') || 'system@ngo.org';
+            loadSummaryStats();
+            loadReports();
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(tabName)) btn.classList.add('active');
+            });
+
+            if (tabName === 'hotspots') setTimeout(initMap, 200);
+            if (tabName === 'analytics') setTimeout(initChart, 200);
+        }
+
+        async function loadSummaryStats() {
+            try {
+                const res = await fetch('/api/ngo/dashboard-summary', {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('session_token') }
+                });
+                const data = await res.json();
+                document.getElementById('totalReports').textContent = data.total_reports || 0;
+                document.getElementById('pendingReports').textContent = data.pending_reports || 0;
+                document.getElementById('notedReports').textContent = data.noted_reports || 0;
+                document.getElementById('collectedReports').textContent = data.collected_reports || 0;
+                if(document.getElementById('totalWeight')) 
+                    document.getElementById('totalWeight').textContent = data.total_waste_weight || 0;
+            } catch (e) { console.error("Stats error", e); }
+        }
+
+        async function loadReports() {
+            const tbody = document.getElementById('reportsTableBody');
+            try {
+                const res = await fetch('/api/ngo/reports', {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('session_token') }
+                });
+                const reports = await res.json();
+                tbody.innerHTML = '';
+                if (!reports.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Empty Registry.</td></tr>';
+                    return;
+                }
+                reports.forEach(r => {
+                    const row = `
+                        <tr>
+                            <td><strong>#${r.id}</strong></td>
+                            <td>${r.user_name}</td>
+                            <td>${r.waste_type}</td>
+                            <td>${r.waste_weight} kg</td>
+                            <td style="font-size: 0.8rem; font-style: italic;">${r.address.substring(0,30)}...</td>
+                            <td>
+                                <select class="status-select status-${r.status}" onchange="changeStatus('${r.id}', this.value)">
+                                    <option value="pending" ${r.status === 'pending' ? 'selected' : ''}>Awaiting</option>
+                                    <option value="noted" ${r.status === 'noted' ? 'selected' : ''}>Noted</option>
+                                    <option value="collected" ${r.status === 'collected' ? 'selected' : ''}>Collected</option>
+                                </select>
+                            </td>
+                            <td>
+                                <button class="btn-map" onclick="window.open('https://www.google.com/maps?q=${r.latitude},${r.longitude}')">Verify Map</button>
+                            </td>
+                        </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="7">Error Accessing Registry</td></tr>'; }
+        }
+
+        async function changeStatus(id, newStatus) {
+            try {
+                const res = await fetch(`/api/ngo/reports/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('session_token')
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    loadSummaryStats();
+                    loadReports();
+                }
+            } catch (e) { console.error("Sync Error", e); }
+        }
+
+        function initMap() {
+            if (map) map.remove();
+            map = L.map('map').setView([20.5937, 78.9629], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            fetch('/api/ngo/reports').then(r => r.json()).then(reports => {
+                reports.forEach(r => {
+                    L.marker([r.latitude, r.longitude]).addTo(map)
+                     .bindPopup(`ID: ${r.id}<br>${r.waste_type}<br>Status: ${r.status}`);
+                });
+            });
+        }
+
+        function initChart() {
+            if (chart) chart.destroy();
+            const ctx = document.getElementById('wasteChart').getContext('2d');
+            fetch('/api/ngo/reports').then(r => r.json()).then(reports => {
+                const counts = { 'E-Waste': 0, 'Bio-Waste': 0, 'Mixed': 0 };
+                reports.forEach(r => counts[r.waste_type] = (counts[r.waste_type] || 0) + 1);
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(counts),
+                        datasets: [{
+                            label: 'Registry Volume',
+                            data: Object.values(counts),
+                            backgroundColor: ['#1b4332', '#2d6a4f', '#95d5b2']
+                        }]
+                    },
+                    options: { 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { font: { family: 'Times New Roman' } } } }
+                    }
+                });
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            document.cookie = "session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = '/login';
+        }
+    </script>
+</body>
+</html>

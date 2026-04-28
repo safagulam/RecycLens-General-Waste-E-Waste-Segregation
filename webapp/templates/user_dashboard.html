@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Smart Waste Classifier</title>
+    <style>
+        :root {
+            --primary-green: #1b4332; /* Deep Forest Green */
+            --mid-green: #2d6a4f;
+            --accent-green: #95d5b2;
+            --pure-white: #ffffff;
+            --off-white: #f4f9f4;
+            --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        body {
+            background-color: var(--pure-white);
+            color: var(--primary-green);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- Bubble Effect --- */
+        #bubble-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bubble {
+            position: absolute;
+            border: 1px solid var(--accent-green);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: floatUp 15s infinite linear;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) scale(0.5); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-20vh) scale(1.2); opacity: 0; }
+        }
+
+        /* --- Header & Navigation --- */
+        .header {
+            background: var(--primary-green);
+            color: var(--pure-white);
+            padding: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 5px solid var(--mid-green);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .logout-btn {
+            color: var(--pure-white);
+            border: 1px solid var(--pure-white);
+            padding: 10px 30px;
+            text-decoration: none;
+            font-style: italic;
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            background: var(--pure-white);
+            color: var(--primary-green);
+        }
+
+        .nav-links {
+            background: var(--pure-white);
+            padding: 20px 40px;
+            display: flex;
+            gap: 30px;
+            border-bottom: 1px solid var(--accent-green);
+            overflow-x: auto;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--primary-green);
+            font-size: 1.1rem;
+            font-weight: bold;
+            position: relative;
+            padding-bottom: 5px;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0; height: 2px;
+            bottom: 0; left: 0;
+            background: var(--mid-green);
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover::after, .nav-links a.active::after {
+            width: 100%;
+        }
+
+        /* --- Bento Grid Layout --- */
+        .container {
+            max-width: 1300px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .bento-item {
+            background: var(--off-white);
+            border: 1px solid var(--accent-green);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .bento-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(27, 67, 50, 0.1);
+            border-color: var(--primary-green);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .bento-item h3 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        .btn-card {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 35px;
+            background: var(--primary-green);
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: var(--transition);
+        }
+
+        .btn-card:hover {
+            background: var(--mid-green);
+            padding-left: 45px;
+        }
+
+        /* --- Campaign Section --- */
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary-green);
+            padding-bottom: 10px;
+        }
+
+        .campaign-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .campaign-user-card {
+            background: white;
+            border: 1px solid var(--accent-green);
+            padding: 30px;
+            transition: var(--transition);
+        }
+
+        .campaign-user-card:hover {
+            background: var(--off-white);
+        }
+
+        .camp-tag {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--mid-green);
+            font-weight: bold;
+        }
+
+        .camp-title {
+            font-size: 1.6rem;
+            margin: 10px 0 20px;
+            font-style: italic;
+        }
+
+        .progress-bg {
+            background: #e0e0e0;
+            height: 4px;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            background: var(--primary-green);
+            height: 100%;
+            transition: width 1.5s ease;
+        }
+
+        /* --- AI Scanner (Editorial Style) --- */
+        .classifier-content {
+            background: var(--off-white);
+            border: 2px solid var(--primary-green);
+            padding: 60px;
+            margin-top: 60px;
+        }
+
+        .upload-section {
+            border: 1px dashed var(--primary-green);
+            padding: 80px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: white;
+            transition: var(--transition);
+        }
+
+        .upload-section:hover {
+            background: #f0fff0;
+        }
+
+        .classify-btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 40px auto;
+            padding: 20px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .classify-btn:hover:not(:disabled) {
+            background: var(--mid-green);
+            letter-spacing: 5px;
+        }
+
+        /* --- Results UI --- */
+        .results-section {
+            border-top: 1px solid var(--accent-green);
+            padding-top: 40px;
+            margin-top: 40px;
+        }
+
+        .result-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .result-img {
+            width: 100%;
+            border: 10px solid white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .waste-badge {
+            background: var(--primary-green);
+            color: white;
+            padding: 10px 30px;
+            display: inline-block;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .score-circle {
+            font-size: 4rem;
+            color: var(--mid-green);
+            font-weight: bold;
+        }
+
+        .hazard-alert {
+            background: #fff5f5;
+            color: #1b4332;
+            border-left: 5px solid #d00;
+            padding: 20px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        /* Animation Classes */
+        [data-reveal] {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: 1s var(--transition);
+        }
+        [data-reveal].active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 900px) {
+            .bento-grid, .result-summary { grid-template-columns: 1fr; }
+            .header { flex-direction: column; text-align: center; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bubble-canvas"></div>
+
+    <header class="header">
+        <div>
+            <h1>Recyclens</h1>
+            <p>Authorized Personnel: <span id="userDisplayName">User</span></p>
+        </div>
+        <a href="#" class="logout-btn" onclick="performLogout()">Sign Out</a>
+    </header>
+
+    <nav class="nav-links">
+        <a href="/user-dashboard" class="active">🏠 Overview</a>
+        <a href="/report-waste">📢 Report Waste</a>
+        
+        
+    </nav>
+
+    <div class="container">
+        
+        <!-- Asymmetric Grid Actions -->
+        <div class="bento-grid">
+            <div class="bento-item" data-reveal style="transition-delay: 0.1s;">
+                <span class="feature-icon">📢</span>
+                <h3>Field Reporting</h3>
+                <p>ogether for a smarter, cleaner society.</p>
+                <a href="/report-waste" class="btn-card">File Report →</a>
+            </div>
+            <div class="bento-item" data-reveal>
+                <span class="feature-icon">📸</span>
+                <h3>Visual Classification</h3>
+                <p>Upload waste and let AI classify it.</p>
+                <a href="#classifierArea" class="btn-card">Initiate Scan ↓</a>
+            </div>
+
+            
+        </div>
+
+        
+        
+        
+
+        <!-- Editorial Style Classifier -->
+        <div class="classifier-content" id="classifierArea" data-reveal>
+            <h2 style="text-align: center; font-size: 3rem; margin-bottom: 50px; font-weight: 400;"> Waste Analysis</h2>
+            
+            <div class="upload-section" onclick="document.getElementById('fileInput').click()">
+                <div style="font-size: 4rem; margin-bottom: 20px;">📤</div>
+                <h3 id="uploadStatus">Upload Captured Imagery</h3>
+                <p style="font-style: italic;">Supported formats: High fidelity JPG, PNG, WEBP</p>
+            </div>
+            <input type="file" id="fileInput" hidden accept="image/*" onchange="previewFile(this)">
+            
+            <button class="classify-btn" id="runClassifier" disabled>Execute Analysis</button>
+
+            <!-- Loading Spinner -->
+            <div id="loading" style="display: none; text-align: center; padding: 50px;">
+                <div class="spinner" style="border: 4px solid var(--accent-green); border-top: 4px solid var(--primary-green); width: 40px; height: 40px; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top: 20px; font-style: italic;">Analyzing material composition...</p>
+            </div>
+
+            <!-- Results -->
+            <div class="results-section" id="results" style="display: none;">
+                <div class="result-summary">
+                    <div>
+                        <img src="" id="outputImage" class="result-img" alt="Result Imagery">
+                    </div>
+                    <div>
+                        <div id="wasteTypeBadge" class="waste-badge"></div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- BUBBLE GENERATOR ---
+        const canvas = document.getElementById('bubble-canvas');
+        for (let i = 0; i < 25; i++) {
+            const b = document.createElement('div');
+            b.className = 'bubble';
+            const size = Math.random() * 50 + 10 + 'px';
+            b.style.width = size; b.style.height = size;
+            b.style.left = Math.random() * 100 + 'vw';
+            b.style.animationDuration = Math.random() * 10 + 10 + 's';
+            b.style.animationDelay = Math.random() * 5 + 's';
+            canvas.appendChild(b);
+        }
+
+        // --- REVEAL ANIMATION ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('active');
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+
+        // --- AUTH & NAMES ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const userRole = localStorage.getItem('user_role');
+            const fullName = localStorage.getItem('user_name');
+            if (!userRole || userRole !== 'user') { window.location.href = '/login'; return; }
+            document.getElementById('userDisplayName').textContent = fullName || 'Authorized User';
+            loadUserCampaigns();
+        });
+
+        // --- LOGIC SYNC (STRICTLY UNMODIFIED) ---
+        async function loadUserCampaigns() {
+            const container = document.getElementById('userCampaignList');
+            try {
+                const response = await fetch('/api/collection-drives');
+                const data = await response.json();
+                container.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(c => {
+                        const current = c.total_items || 0;
+                        const target = c.target_items || 100;
+                        const percent = Math.min(Math.round((current / target) * 100), 100);
+                        container.innerHTML += `
+                            <div class="campaign-user-card">
+                                <span class="camp-tag">${c.campaign_type || 'DRIVE'}</span>
+                                <div class="camp-title">${c.name}</div>
+                                <p>📍 <strong>Hub:</strong> ${c.location}</p>
+                                <p>📅 <strong>Cycle:</strong> ${c.start_date} - ${c.end_date}</p>
+                                <div class="progress-bg"><div class="progress-fill" style="width: ${percent}%"></div></div>
+                                <p style="font-size: 0.8rem; text-align: right;">${percent}% QUOTA MET</p>
+                            </div>`;
+                    });
+                } else {
+                    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; font-style: italic;">No active logistics cycles found.</p>';
+                }
+            } catch (e) { container.innerHTML = '<p>Connection lost.</p>'; }
+        }
+
+        const fileInput = document.getElementById('fileInput');
+        const classifyBtn = document.getElementById('runClassifier');
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    document.getElementById('uploadStatus').textContent = e.target.files[0].name;
+                    classifyBtn.disabled = false;
+                }
+            });
+        }
+
+        classifyBtn.addEventListener('click', async () => {
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            const resultsDiv = document.getElementById('results');
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'block';
+            resultsDiv.style.display = 'none';
+            classifyBtn.disabled = true;
+
+            try {
+                const response = await fetch('/predict', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('wasteTypeBadge').textContent = data.waste_type;
+                    document.getElementById('outputImage').src = data.result_image;
+                   
+                    resultsDiv.style.display = 'block';
+                    resultsDiv.scrollIntoView({ behavior: 'smooth' });
+                }
+            } catch (err) { alert("Analysis failed."); }
+            finally { loadingDiv.style.display = 'none'; classifyBtn.disabled = false; }
+        });
+
+        function performLogout() {
+            localStorage.clear();
+            document.cookie = "session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = '/login';
+        }
+
+    </script>
+</body>
+</html>
